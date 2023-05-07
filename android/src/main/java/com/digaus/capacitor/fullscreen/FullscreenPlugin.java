@@ -96,25 +96,16 @@ public class FullscreenPlugin extends Plugin {
             this.getBridge().getActivity().getWindow().setDecorFitsSystemWindows(false);
             this.getBridge().getActivity().getWindow().setStatusBarColor(0);
             this.getBridge().getActivity().getWindow().setNavigationBarColor(0);
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            // On older versions of android setDecorFitsSystemWindows doesn't exist yet, but it can
-            // be emulated with flags.
-            // It still must be P or greater, as that is the min version for getting the insets
-            // through the native plugin.
-
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             this.getBridge().getActivity().getWindow().getDecorView().setSystemUiVisibility(
                     View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION |
                             View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
                             View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
             this.getBridge().getActivity().getWindow().setStatusBarColor(0);
             this.getBridge().getActivity().getWindow().setNavigationBarColor(0);
-        } else if (Build.VERSION.SDK_INT >= 19 && Build.VERSION.SDK_INT < 21) {
+        } else if (Build.VERSION.SDK_INT >= 19 && Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             setWindowFlag(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS, true);
-        } else if (Build.VERSION.SDK_INT >= 19) {
             this.getBridge().getActivity().getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
-        } else if (Build.VERSION.SDK_INT >= 21) {
-            setWindowFlag(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS, false);
-            this.getBridge().getActivity().getWindow().setStatusBarColor(Color.TRANSPARENT);
         }
     }
     private void setWindowFlag(final int bits, boolean on) {
