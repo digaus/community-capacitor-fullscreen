@@ -1,17 +1,11 @@
 package com.digaus.capacitor.fullscreen;
 
-import android.graphics.Color;
 import android.graphics.Rect;
 import android.os.Build;
-import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
 import android.view.Window;
 import android.view.WindowManager;
-
-import androidx.core.view.WindowCompat;
-import androidx.core.view.WindowInsetsControllerCompat;
 
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Logger;
@@ -27,10 +21,8 @@ public class FullscreenPlugin extends Plugin {
 
     private View decorView;
     private View contentView;
-    private int additionalSpacing = -1;
-    private int lastWidth = 0;
-
-    private JSObject lastInsets;
+    private int additionalSpacing;
+    private int lastOrientation = -1;
 
     @PluginMethod
     public void getSafeAreaInsets(PluginCall call) {
@@ -61,18 +53,41 @@ public class FullscreenPlugin extends Plugin {
     public void load() {
         super.load();
         this.hideBars();
-        //only required on newer android versions. it was working on API level 19 (Build.VERSION_CODES.KITKAT)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            this.decorView = this.getBridge().getActivity().getWindow().getDecorView();
-            this.contentView = ((ViewGroup) decorView.findViewById(android.R.id.content)).getChildAt(0);
-            decorView.getViewTreeObserver().addOnGlobalLayoutListener(onGlobalLayoutListener);
-        }
+
+        this.decorView = getActivity().getWindow().getDecorView();
+        this.contentView = ((ViewGroup) decorView.findViewById(android.R.id.content)).getChildAt(0);
+
+        decorView.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
+            JSObject insets = fullscreen.getSafeAreaInsets(getBridge());
+            notifyListeners("insetsChanged", insets, true);
+            Boolean keyboardResizeNative = getConfig().getBoolean("keyboardResizeNative", false);
+            if (keyboardResizeNative) {
+                //r will be populated with the coordinates of your view that area still visible.
+                Rect r = new Rect();
+                decorView.getWindowVisibleDisplayFrame(r);
+
+                //get screen height and calculate the difference with the useable area from the r
+                int height = decorView.getContext().getResources().getDisplayMetrics().heightPixels;
+                int orientation = getActivity().getResources().getConfiguration().orientation;
+
+                if (orientation != lastOrientation) {
+                    lastOrientation = orientation;
+                    additionalSpacing = (height - r.bottom) * -1;
+                }
+                int diff = height + additionalSpacing - r.bottom;
+
+                // Somehow we need this on Android < 9
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P && diff > 0) {
+                    diff = (int) (diff - insets.getInteger("bottom") * getActivity().getResources().getDisplayMetrics().density);
+                }
+
+                if (contentView.getPaddingBottom() != diff && diff >= 0) {
+                    contentView.setPadding(0, 0, 0, diff);
+                }
+            }
+        });
     }
-   /* @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        this.hideBars();
-    }*/
+
     @Override
     public void handleOnResume(){
         super.handleOnResume();
@@ -83,12 +98,6 @@ public class FullscreenPlugin extends Plugin {
         super.handleOnPause();
         this.hideBars();
     }
-    /*@Override
-    public void onWindowFocusChanged(boolean hasFocus)
-    {
-        super.onWindowFocusChanged(hasFocus);
-        this.hideBars();
-    }*/
 
     private void hideBars() {
         Logger.warn("Version: " + Build.VERSION.SDK_INT + " | " + Build.VERSION_CODES.R);
@@ -120,33 +129,4 @@ public class FullscreenPlugin extends Plugin {
     }
 
 
-    ViewTreeObserver.OnGlobalLayoutListener onGlobalLayoutListener = new ViewTreeObserver.OnGlobalLayoutListener() {
-        @Override
-        public void onGlobalLayout() {
-
-            JSObject insets = fullscreen.getSafeAreaInsets(getBridge());
-            notifyListeners("insetsChanged", insets, true);
-
-
-            /*
-            //r will be populated with the coordinates of your view that area still visible.
-            Rect r = new Rect();
-            decorView.getWindowVisibleDisplayFrame(r);
-
-
-            //get screen height and calculate the difference with the useable area from the r
-            int height = decorView.getContext().getResources().getDisplayMetrics().heightPixels;
-            int width = decorView.getContext().getResources().getDisplayMetrics().widthPixels;
-            if (additionalSpacing == -1 || lastWidth != width) {
-                //get additional spacing that could be caused by elements like the status bar
-                additionalSpacing = (height - r.bottom) * -1;
-                lastWidth = width;
-            }
-            int diff = height + additionalSpacing - r.bottom;
-
-            if (contentView.getPaddingBottom() != diff) {
-              //  contentView.setPadding(0, 0, 0, diff);
-            }*/
-        }
-    };
 }
