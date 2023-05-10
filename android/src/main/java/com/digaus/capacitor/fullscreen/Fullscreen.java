@@ -38,12 +38,12 @@ public class Fullscreen {
     }
     public JSObject getSafeAreaInsets(Bridge bridge) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            Log.i(FullscreenPlugin.class.toString(), String.format("Requires at least %d+", Build.VERSION_CODES.P));
+            Log.i(Fullscreen.class.toString(), String.format("Requires at least %d+", Build.VERSION_CODES.P));
             return this.result(0, 0, 0, 0);
         }
         WindowInsets windowInsets = bridge.getActivity().getWindow().getDecorView().getRootWindowInsets();
         if (windowInsets == null) {
-            Log.i(FullscreenPlugin.class.toString(), "WindowInsets is not available.");
+            Log.i(Fullscreen.class.toString(), "WindowInsets is not available.");
             return this.result(0, 0, 0, 0);
         }
         float density = this.getDensity(bridge);
