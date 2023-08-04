@@ -60,7 +60,7 @@ public class FullscreenPlugin extends Plugin {
         decorView.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
             JSObject insets = fullscreen.getSafeAreaInsets(getBridge());
             notifyListeners("insetsChanged", insets, true);
-            Boolean keyboardResizeNative = getConfig().getBoolean("keyboardResizeNative", false);
+            Boolean keyboardResizeNative = getConfig().getBoolean("keyboardResizeNative", true);
             if (keyboardResizeNative) {
                 //r will be populated with the coordinates of your view that area still visible.
                 Rect r = new Rect();
