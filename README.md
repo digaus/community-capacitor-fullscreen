@@ -1,11 +1,11 @@
-# @capacitor-community//fullscreen
+# @capacitor-community/fullscreen
 
 Enables immersive fullscreen mode for android devices
 
 ## Install
 
 ```bash
-npm install @capacitor-community//fullscreen
+npm install @capacitor-community/fullscreen
 npx cap sync
 ```
 
